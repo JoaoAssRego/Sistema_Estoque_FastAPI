@@ -39,7 +39,6 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String)
     active = Column(Boolean, default=True)
-    admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.now, nullable=True)
 
     def __init__(self, occupation, name, email, password, active=True, admin=False):
@@ -48,10 +47,9 @@ class User(Base):
         self.email = email
         self.password = password
         self.active = active
-        self.admin = admin
     
     def __repr__(self):
-        return f"<User(id={self.id}, name={self.name}, email={self.email}, occupation={self.occupation}, active={self.active}, admin={self.admin})>"
+        return f"<User(id={self.id}, name={self.name}, email={self.email}, occupation={self.occupation}, active={self.active})>"
 
 class Category(Base):
     __tablename__ = "categories"
