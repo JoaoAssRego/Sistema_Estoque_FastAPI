@@ -20,7 +20,7 @@ class MovementType(Enum):
     IN = "in"
     OUT = "out"
 
-class OrderStatus(Enum):
+class OrderStatus(Enum): # Utilizado no lugar de uma tupla para melhor clareza e segurança
     PENDENTE = "pendente"
     ENVIADO = "enviado"
     ENTREGUE = "entregue"
@@ -88,7 +88,6 @@ class Product(Base):
     name = Column(String, index=True)
     description = Column(String, index=True)
     price = Column(Float, nullable=False)
-    # Removido quantity - será controlado apenas por StockLevel
     created_at = Column(DateTime, default=datetime.now, nullable=True)
     category_id = Column(Integer, ForeignKey("categories.id"))
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
@@ -189,7 +188,3 @@ class Order(Base):
 
     def __repr__(self):
         return f"<Order(id={self.id}, status={self.status}, user_id={self.user_id}, product_id={self.product_id}, quantity={self.quantity})>"
-
-# Função para criar as tabelas
-def create_tables():
-    Base.metadata.create_all(bind=db)
