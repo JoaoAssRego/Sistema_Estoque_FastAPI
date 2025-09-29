@@ -16,7 +16,7 @@ class OccupationType(Enum):
     SYSTEM_ADMIN = "system_admin"
     LOGISTICS_COORDINATOR = "logistics_coordinator"
 
-class MovementType(Enum):
+class MovementType( Enum):
     IN = "in"
     OUT = "out"
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import User, db
-from .dependencies import session_dependencies
+from ..dependencies import session_dependencies
 from utils.security import bcrypt_context
-from schemas.schemas import UserBase
+from schemas.user_schema import UserBase
 from sqlalchemy.orm import Session
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
