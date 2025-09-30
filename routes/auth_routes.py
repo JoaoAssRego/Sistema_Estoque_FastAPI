@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import User, db
-from ..dependencies import session_dependencies
+from .dependencies import session_dependencies
 from utils.security import bcrypt_context
 from schemas.user_schema import UserBase
 from sqlalchemy.orm import Session
@@ -12,7 +12,7 @@ async def home():
     return {"message": "Welcome to the authentication home page"}
 
 @auth_router.post("/Signup")
-async def signup(user_base = UserBase, session: Session = Depends(session_dependencies)):
+async def signup(user_base: UserBase, session: Session = Depends(session_dependencies)):
     user = session.query(User).filter(User.email == user_base.email).first() # Verifica se o email já está cadastrado
     if user:
         raise HTTPException(status_code=400, detail="Email already registered, try another one") # Levanta um erro se o email já existir

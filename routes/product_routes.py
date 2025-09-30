@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import Product, db
-from ..dependencies import session_dependencies
+from .dependencies import session_dependencies
 from schemas.user_schema import Product_Base
 from sqlalchemy.orm import Session
 
