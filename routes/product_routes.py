@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import Product, db
 from .dependencies import session_dependencies
-from schemas.user_schema import Product_Base
+from schemas.product_schema import ProductBase
 from sqlalchemy.orm import Session
 
 product_router = APIRouter(prefix="/product", tags=["product"]) # Prefixo para todas as rotas de produto
 
 @product_router.post("/")
-async def create_product(product_base: Product_Base, session: Session = Depends(session_dependencies)):
+async def create_product(product_base: ProductBase, session: Session = Depends(session_dependencies)):
     product = session.query(Product).filter(Product.name == product_base.name).first() # Verifica se o produto já está cadastrado
     if product:
         raise HTTPException(status_code=400, detail="Product already registered, try another one") # Levanta um erro se o produto já existir

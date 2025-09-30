@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import Category, db
-from ..dependencies import session_dependencies
-from schemas.user_schema import Category_Base
+from .dependencies import session_dependencies
+from schemas.category_schema import CategoryBase
 from sqlalchemy.orm import Session
 
 category_router = APIRouter(prefix="/category", tags=["category"]) # Prefixo para todas as rotas de produto
 
 @category_router.post("/")
-async def create_category(category_base: Category_Base, session: Session = Depends(session_dependencies)):
+async def create_category(category_base: CategoryBase, session: Session = Depends(session_dependencies)):
     category = session.query(Category).filter(Category.name == category_base.name).first() # Verifica se a categoria já está cadastrada
     if category:
         raise HTTPException(status_code=400, detail="Category already registered, try another one") # Levanta um erro se a categoria já existir
