@@ -6,6 +6,7 @@ class UserBase(BaseModel): # Modelo base para usuário
     name: str
     email: str
     password: str
+    admin: Optional[bool] = False
     active: Optional[bool]
 
     class Config: # Configuração para trabalhar com ORM

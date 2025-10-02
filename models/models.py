@@ -10,33 +10,14 @@ db = create_engine("sqlite:///./banco.db")
 # Criação da base declarativa
 Base = declarative_base()
 
-# Enums para tipos de dados
-class OccupationType(Enum):
-    PACKER = "packer"
-    SYSTEM_ADMIN = "system_admin"
-    LOGISTICS_COORDINATOR = "logistics_coordinator"
-
-class MovementType( Enum):
-    IN = "in"
-    OUT = "out"
-
-class OrderStatus(Enum): # Utilizado no lugar de uma tupla para melhor clareza e segurança
-    PENDENTE = "pendente"
-    ENVIADO = "enviado"
-    ENTREGUE = "entregue"
-    CANCELADO = "cancelado"
-
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    occupation = Column(ChoiceType(choices=[
-        (OccupationType.PACKER.value, 'Packer'),
-        (OccupationType.SYSTEM_ADMIN.value, 'System Admin'),
-        (OccupationType.LOGISTICS_COORDINATOR.value, 'Logistics Coordinator')
-    ]), nullable=False)
+    occupation = Column(String, nullable=False)
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
+    admin = Column(Boolean, default=False)
     password = Column(String)
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now, nullable=True)
@@ -46,10 +27,11 @@ class User(Base):
         self.name = name
         self.email = email
         self.password = password
+        self.admin = admin
         self.active = active
     
     def __repr__(self):
-        return f"<User(id={self.id}, name={self.name}, email={self.email}, occupation={self.occupation}, active={self.active})>"
+        return f"<User(id={self.id}, name={self.name}, email={self.email}, occupation={self.occupation}, admin={self.admin}, active={self.active})>"
 
 class Category(Base):
     __tablename__ = "categories"
@@ -111,10 +93,7 @@ class StockMovement(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    movement_type = Column(ChoiceType(choices=[
-        (MovementType.IN.value, 'In'),
-        (MovementType.OUT.value, 'Out')
-    ]), nullable=False)
+    movement_type = Column(String, nullable=False) # 'entrada' ou 'saida'
     quantity = Column(Integer, nullable=False)
     reference_type = Column(String(20))
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -162,12 +141,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    status = Column(ChoiceType(choices=[
-        (OrderStatus.PENDENTE.value, 'Pendente'),
-        (OrderStatus.ENVIADO.value, 'Enviado'),
-        (OrderStatus.ENTREGUE.value, 'Entregue'),
-        (OrderStatus.CANCELADO.value, 'Cancelado')
-    ]), default=OrderStatus.PENDENTE.value)
+    status = Column(String, default="pendente")
     user_id = Column(Integer, ForeignKey("users.id"))
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
