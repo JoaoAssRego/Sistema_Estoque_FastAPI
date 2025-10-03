@@ -4,9 +4,9 @@ from routes.order_routes import order_router
 from routes.product_routes import product_router
 from routes.category_routes import category_router
 from routes.supplier_routes import supplier_router
-from security.security import bcrypt_context
 
-app = FastAPI(tittle="Inventory Management System", description="API for managing inventory, orders, and users", version="1.0.0")
+app = FastAPI(title="Inventory Management System", description="API for managing inventory, orders, and users", version="1.0.0")
+
 
 app.include_router(auth_router)
 app.include_router(order_router)   
