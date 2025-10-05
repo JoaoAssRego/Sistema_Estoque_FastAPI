@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from security.security import SECRET_KEY, ALGORITHM
+from security.security import SECRET_KEY, ALGORITHM, oauth2_schema
 from models import db, User # Importa o engine do banco de dados
 from sqlalchemy.orm import sessionmaker, Session # Importa sessionmaker para criar sessões
 from jose import jwt,JWTError
@@ -12,7 +12,7 @@ def session_dependencies():
         Session().close() # Garante que a sessão seja fechada após o uso
 
 
-def verify_token(token, session: Session= Depends(session_dependencies)):
+def verify_token(token: str = Depends(oauth2_schema), session: Session= Depends(session_dependencies)):
     # Verifica o token válido e extraí ID do usuário
     try:
         dict_info = jwt.decode(token,SECRET_KEY, ALGORITHM)
