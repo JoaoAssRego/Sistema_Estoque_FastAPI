@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models.models import User, db
-from .dependencies import session_dependencies
+from .dependencies import session_dependencies, verify_token
 from security.security import bcrypt_context
 from schemas.user_schema import UserBase
 from schemas.auth_schema import AuthBase
@@ -30,10 +30,20 @@ async def login(auth_base: AuthBase, session: Session = Depends(session_dependen
         raise HTTPException(status_code=400, detail="User not found")
     else:
         access_token = create_token(user.id)
+        refresh_token = create_token(user.id,token_duration=7)
         return {
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "token_type": "Bearer"
         }
 
+@auth_router.get("/refresh")
+async def useRefreshToken(user: User = Depends(verify_token)):
+    # Verificação do token para gerar um novo access token
+    access_token = create_token(user.id)
 
+    return {
+        "access token": access_token,
+        "token_type": "bearer"
+    }
 

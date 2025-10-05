@@ -8,15 +8,16 @@ from jose import jwt,JWTError
 from datetime import datetime,timedelta,timezone
 from security.security import SECRET_KEY,ACCESS_TOKEN_EXPIRE_MINUTES,ALGORITHM,bcrypt_context
 
-def create_token(users_id): # JWT 
-    expire_date = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+def create_token(users_id, token_duration=ACCESS_TOKEN_EXPIRE_MINUTES): # JWT 
+    expire_date = datetime.now(timezone.utc) + timedelta(minutes=token_duration)
     payload = {
         "user_id": str(users_id),
         "expire_date": int(expire_date.timestamp())
     }
     encoded_jwt = jwt.encode(payload,SECRET_KEY,ALGORITHM)
-
+    
     return encoded_jwt
+
 
 def auth(email,password,session):
     user = session.query(User).filter(User.email == email).first()
