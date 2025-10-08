@@ -7,19 +7,16 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from security.security import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, bcrypt_context
 
-def create_token(user_id: int) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {
-        "sub": str(user_id),
-        "exp": int(expire.timestamp())  # JWT padrão (timestamp UNIX)
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+def create_token(user_id: int, token_duration: int = ACCESS_TOKEN_EXPIRE_MINUTES):
+    expire = datetime.now(tz=timezone.utc) + timedelta(minutes=token_duration)
+    payload = {"sub": str(user_id), "exp": int(expire.timestamp())}  # exp como UNIX timestamp
+    encoded_jwt = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 def auth(email: str, password: str, session: Session):
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        return None
-    # Correção: retorna None se a senha NÃO confere
+        return False
     if not bcrypt_context.verify(password, user.password):
-        return None
+        return False
     return user

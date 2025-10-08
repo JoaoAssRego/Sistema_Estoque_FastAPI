@@ -12,24 +12,25 @@ async def get_order():
 
 @order_router.post("/create_order")
 async def create_order(order_base: OrderBase, session: Session = Depends(session_dependencies)):
-    order = session.query(Order).filter(Order.product_name == order_base.product_name).first() # Verifica se o produto já está cadastrado
+    order = session.query(Order).filter(Order.product_id == order_base.product_id).first() # Verifica se o produto já está cadastrado
 
     if order:
         raise HTTPException(status_code=400, detail="Order already registered, try another one") # Levanta um erro se o produto já existir
 
     new_order = Order(
-        product_name=order_base.product_name,
+        product_id=order_base.product_id,
+        status=order_base.status,
+        user_id=order_base.user_id,
         quantity=order_base.quantity,
-        price=order_base.price,
+        total_price=order_base.total_price,
     ) # Cria um novo pedido
     session.add(new_order) # Adiciona o novo pedido à sessão
     session.commit() # Salva as mudanças no banco de dados
-    session.refresh(new_order)
     return {
         "id": new_order.id,
-        "product_name": new_order.product_name,
+        "product_id": new_order.product_id,
         "quantity": new_order.quantity,
-        "price": new_order.price,
+        "total_price": new_order.total_price,
     }
 
 @order_router.post("/cancel_order")
