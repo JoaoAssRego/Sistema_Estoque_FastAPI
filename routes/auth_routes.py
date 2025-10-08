@@ -28,15 +28,14 @@ async def signup(user_base: UserBase, session: Session = Depends(session_depende
 async def login(auth_base: AuthBase, session: Session = Depends(session_dependencies)):
     user = auth(auth_base.email, auth_base.password, session)
     if not user:
-        raise HTTPException(status_code=400, detail="User not found")
-    else:
-        access_token = create_token(user.id)
-        refresh_token = create_token(user.id,token_duration=7)
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "Bearer"
-        }
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+    access_token = create_token(user.id)
+    refresh_token = create_token(user.id,token_duration=7)
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "Bearer"
+    }
 @auth_router.post("/login_form")
 async def login_form(request_form_schema: OAuth2PasswordRequestForm= Depends(), session: Session = Depends(session_dependencies)):
     user = auth(request_form_schema.username, request_form_schema.password, session)

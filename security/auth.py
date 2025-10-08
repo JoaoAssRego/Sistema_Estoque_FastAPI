@@ -3,27 +3,23 @@ from fastapi import APIRouter, Depends, HTTPException
 from models.models import User, db
 from routes.dependencies import session_dependencies
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-from jose import jwt,JWTError
-from datetime import datetime,timedelta,timezone
-from security.security import SECRET_KEY,ACCESS_TOKEN_EXPIRE_MINUTES,ALGORITHM,bcrypt_context
+from jose import jwt, JWTError
+from datetime import datetime, timedelta, timezone
+from security.security import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, bcrypt_context
 
-def create_token(users_id, token_duration=ACCESS_TOKEN_EXPIRE_MINUTES): # JWT 
-    expire_date = datetime.now(timezone.utc) + timedelta(minutes=token_duration)
+def create_token(user_id: int) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
-        "user_id": str(users_id),
-        "expire_date": int(expire_date.timestamp())
+        "sub": str(user_id),
+        "exp": int(expire.timestamp())  # JWT padrão (timestamp UNIX)
     }
-    encoded_jwt = jwt.encode(payload,SECRET_KEY,ALGORITHM)
-    
-    return encoded_jwt
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-
-def auth(email,password,session):
+def auth(email: str, password: str, session: Session):
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        return False
-    elif bcrypt_context.verify(password,user.password): # Verifica se a senha do usuario é a mesma contida no BD
-        return False
-
+        return None
+    # Correção: retorna None se a senha NÃO confere
+    if not bcrypt_context.verify(password, user.password):
+        return None
     return user

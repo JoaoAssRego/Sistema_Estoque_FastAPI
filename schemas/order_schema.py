@@ -5,7 +5,6 @@ class OrderBase(BaseModel): # Modelo base para Order
     product_name: str
     status: Optional[str] = "pending"
     user_id: Optional[int] = None
-    
     quantity: int
     price: float
 
