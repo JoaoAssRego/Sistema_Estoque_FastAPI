@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import Category, db
-from .dependencies import session_dependencies
+from .dependencies import session_dependencies,verify_token
 from schemas.category_schema import CategoryBase
 from sqlalchemy.orm import Session
 
-category_router = APIRouter(prefix="/category", tags=["category"]) # Prefixo para todas as rotas de produto
+category_router = APIRouter(prefix="/category", tags=["category"], dependencies=[Depends(verify_token)]) # Prefixo para todas as rotas de produto
 
-@category_router.post("/")
+@category_router.post("/create")
 async def create_category(category_base: CategoryBase, session: Session = Depends(session_dependencies)):
     category = session.query(Category).filter(Category.name == category_base.name).first() # Verifica se a categoria já está cadastrada
     if category:
@@ -16,3 +16,15 @@ async def create_category(category_base: CategoryBase, session: Session = Depend
         session.add(category) # Adiciona a nova categoria à sessão
         session.commit() # Salva as mudanças no banco de dados
     return {"message": f"Create a new category {category_base.name}"}
+
+@category_router.post("/delete")
+async def delete_category(category_id = int, session: Session= Depends(session_dependencies)):
+    category = session.query(Category).filter(Category.id == category_id).first()
+    if category:
+        session.delete(category)
+        session.commit()
+        return {
+            "message": f"Category: {category_id} deleted!"
+        }
+    else:
+        raise HTTPException(status_code=404, detail="Category not found!") # Levanta um erro se a categoria já existir
