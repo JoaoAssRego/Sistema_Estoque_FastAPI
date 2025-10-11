@@ -1,39 +1,46 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models.models import Order, db  # corrigido o import
+from models.models import Order,Product,User, db
 from .dependencies import session_dependencies, verify_token
-from schemas.order_schema import OrderBase
-
+from schemas.order_schema import OrderBase, GetOrderBase
+from typing import List 
 order_router = APIRouter(prefix="/order", tags=["order"], dependencies=[Depends(verify_token)])  # Prefixo para todas as rotas de pedido
 
-@order_router.get("/orders")
-async def get_order():
-    return {"Esses são meus pedidos"}
+# Listar todos os pedidos
+@order_router.get("/", response_model=List[GetOrderBase])
+async def list_order(session: Session = Depends(session_dependencies), current_user: User = Depends(verify_token)):
+    return session.query(Order).all()
 
-@order_router.post("/create_order")
-async def create_order(order_base: OrderBase, session: Session = Depends(session_dependencies)):
+@order_router.get("/{order_id}")
+async def get_order(order_id: int, session: Session = Depends(session_dependencies), current_user: User = Depends(verify_token)):
+    order = session.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found!")    
+    return order
+        
+
+@order_router.post("/create")
+async def create_order(order_base: OrderBase, session: Session = Depends(session_dependencies), current_user: User = Depends(verify_token)):
     order = session.query(Order).filter(Order.product_id == order_base.product_id).first() # Verifica se o produto já está cadastrado
 
-    if order:
-        raise HTTPException(status_code=400, detail="Order already registered, try another one") # Levanta um erro se o produto já existir
-
+    # Buscar produto e calcular total no servidor
+    product = session.get(Product, order_base.product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found in our Database")
+    
     new_order = Order(
-        product_id=order_base.product_id,
-        status=order_base.status,
-        user_id=order_base.user_id,
+        product_id=product.id,
+        status="PENDING",
+        user_id=current_user.id,
         quantity=order_base.quantity,
-        total_price=order_base.total_price,
+        total_price=float(product.price) * int(order_base.quantity),
     ) # Cria um novo pedido
     session.add(new_order) # Adiciona o novo pedido à sessão
     session.commit() # Salva as mudanças no banco de dados
-    return {
-        "id": new_order.id,
-        "product_id": new_order.product_id,
-        "quantity": new_order.quantity,
-        "total_price": new_order.total_price,
-    }
+    session.refresh(new_order)  # Atualiza a instância do pedido para refletir o estado atual do banco de dados
+    return new_order
 
-@order_router.post("/cancel_order")
+@order_router.post("/cancel")
 async def cancel_order(order_id: int, session: Session= Depends(session_dependencies)):
     order = session.query(Order).filter(Order.id == order_id).first() # Encontra pedido no Database
     if not order: # Caso não encontrado, retorna erro

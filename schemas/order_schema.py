@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class OrderBase(BaseModel): # Modelo base para Order
@@ -8,5 +8,15 @@ class OrderBase(BaseModel): # Modelo base para Order
     quantity: int
     total_price: float
 
-    class Config: # Configuração para trabalhar com ORM
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+class GetOrderBase(BaseModel):
+    id: int
+    product_id: int
+    user_id: int
+    quantity: int
+    total_price: float
+    status: str
+
+    # Permite ler de objetos SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)

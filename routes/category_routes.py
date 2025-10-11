@@ -6,6 +6,13 @@ from sqlalchemy.orm import Session
 
 category_router = APIRouter(prefix="/category", tags=["category"], dependencies=[Depends(verify_token)]) # Prefixo para todas as rotas de produto
 
+@category_router.get("/")
+async def get_category(category_id: int, session: Session = Depends(session_dependencies)):
+    if category_id != 0:
+        return session.query(Category).all()
+    else:
+        return session.query(Category).filter(Category.id == category_id).first()
+    
 @category_router.post("/create")
 async def create_category(category_base: CategoryBase, session: Session = Depends(session_dependencies)):
     category = session.query(Category).filter(Category.name == category_base.name).first() # Verifica se a categoria já está cadastrada

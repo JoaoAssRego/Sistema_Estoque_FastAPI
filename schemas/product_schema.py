@@ -10,3 +10,6 @@ class ProductBase(BaseModel): # Modelo base para Product
 
     class Config: # Configuração para trabalhar com ORM
         from_attributes = True
+
+class GetProductBase(BaseModel): # Modelo para visualizar produtos
+    id: Optional[int]
