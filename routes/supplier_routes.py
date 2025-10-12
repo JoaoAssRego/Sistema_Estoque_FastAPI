@@ -37,3 +37,15 @@ async def create_supplier(supplier_base: SupplierBase, session: Session = Depend
         raise HTTPException(status_code=409, detail="Supplier already exists")
     session.refresh(new_supplier)
     return new_supplier
+
+@supplier_router.delete("/{supplier_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_supplier(supplier_id: int, session: Session = Depends(session_dependencies), current_user: User = Depends(verify_token)):
+    if not current_user.admin:
+        raise HTTPException(status_code=403, detail="Only admins can delete suppliers")
+    supplier = session.get(Supplier, supplier_id)
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found!") # Levanta um erro se o fornecedor não existir
+    session.delete(supplier)
+    session.commit()
+    # 204 No Content: sem corpo
+    return
