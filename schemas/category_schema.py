@@ -1,10 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class CategoryBase(BaseModel): # Modelo base para category
     name: str
     description: Optional[str]
 
+    model_config= ConfigDict(from_attributes=True)
 
-    class Config: # Configuração para trabalhar com ORM
-        from_attributes = True
+class JsonCategoryBase(BaseModel):
+    id: int
+    name: str
+    description: str
+
+    model_config= ConfigDict(from_attributes=True)

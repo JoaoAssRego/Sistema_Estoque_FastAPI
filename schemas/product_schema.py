@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class ProductBase(BaseModel): # Modelo base para Product
@@ -8,8 +8,16 @@ class ProductBase(BaseModel): # Modelo base para Product
     category_id: int
     supplier_id: int
 
-    class Config: # Configuração para trabalhar com ORM
-        from_attributes = True
+    # Permite ler de objetos SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)
 
-class GetProductBase(BaseModel): # Modelo para visualizar produtos
-    id: Optional[int]
+class JsonProductBase(BaseModel): # Modelo para visualizar produtos
+    id: int
+    name: str
+    description: str
+    price: float
+    category_id: int
+    supplier_id: int
+
+    # Permite ler de objetos SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)

@@ -1,17 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
-from models import Product, db
-from .dependencies import session_dependencies
-from schemas.product_schema import ProductBase, GetProductBase
+from models import Product,User, db
+from .dependencies import session_dependencies, verify_token
+from schemas.product_schema import ProductBase, JsonProductBase
 from sqlalchemy.orm import Session
+from typing import List
 
-product_router = APIRouter(prefix="/product", tags=["product"]) # Prefixo para todas as rotas de produto
+product_router = APIRouter(prefix="/product", tags=["product"], dependencies= [Depends(verify_token)]) # Prefixo para todas as rotas de produto
 
-@product_router.post("/")
-async def get_product(product_id: int, session: Session = Depends(session_dependencies)):
-    if product_id != 0:
-        return session.query(Product).all()
-    else:
-        return session.query(Product).filter(Product.id == get_product.id).first() # Retorna um produto específico
+# Listar todos os produtos
+@product_router.get("/", response_model=List[JsonProductBase])
+async def list_products(session: Session = Depends(session_dependencies), current_user: User = Depends(verify_token)):
+    return session.query(Product).all()
+
+@product_router.get("/{product_id}")
+async def get_product(product_id: int, session: Session = Depends(session_dependencies), current_user: User = Depends(verify_token)):
+    product = session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found!")    
+    return product
 
 @product_router.post("/create")
 async def create_product(product_base: ProductBase, session: Session = Depends(session_dependencies)):

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from models.models import User, db
+from models.models import User
 from .dependencies import session_dependencies, verify_token
 from security.security import bcrypt_context
 from schemas.user_schema import UserBase
@@ -10,11 +10,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
-@auth_router.post("/")
-async def home():
-    return {"message": "Welcome to the authentication home page"}
-
-@auth_router.post("/signup")
+@auth_router.post("/signup", status_code=201)
 async def signup(user_base: UserBase, session: Session = Depends(session_dependencies)):
     user = session.query(User).filter(User.email == user_base.email).first()
     if user:
@@ -37,7 +33,7 @@ async def signup(user_base: UserBase, session: Session = Depends(session_depende
         "email": new_user.email,
         "occupation": new_user.occupation,
         "access_token": access_token,
-        "token_type": "Bearer"
+        "token_type": "bearer"
     }
 
 @auth_router.post("/login")
@@ -50,7 +46,7 @@ async def login(auth_base: AuthBase, session: Session = Depends(session_dependen
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "token_type": "Bearer"
+        "token_type": "bearer"
     }
 
 @auth_router.post("/login_form")
@@ -70,7 +66,7 @@ async def login_form(request_form_schema: OAuth2PasswordRequestForm = Depends(),
 async def useRefreshToken(user: User = Depends(verify_token)):
     access_token = create_token(user.id)
     return {
-        "access token": access_token,
+        "access_token": access_token,
         "token_type": "bearer"
     }
 

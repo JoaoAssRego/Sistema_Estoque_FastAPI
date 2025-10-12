@@ -6,11 +6,10 @@ class OrderBase(BaseModel): # Modelo base para Order
     status: Optional[str] = "pending"
     user_id: Optional[int] = None
     quantity: int
-    total_price: float
 
     model_config = ConfigDict(from_attributes=True)
 
-class GetOrderBase(BaseModel):
+class JsonOrderBase(BaseModel):
     id: int
     product_id: int
     user_id: int

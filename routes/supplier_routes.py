@@ -1,10 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import Supplier, db
 from .dependencies import session_dependencies
-from schemas.supplier_schema import SupplierBase
+from schemas.supplier_schema import SupplierBase, JsonSupplierBase
 from sqlalchemy.orm import Session
-
+from typing import List
 supplier_router = APIRouter(prefix="/supplier", tags=["supplier"]) # Prefixo para todas as rotas de supplier
+
+@supplier_router.get("/", response_model=List[JsonSupplierBase])
+async def list_supplier(session: Session = Depends(session_dependencies)):
+    return session.query(Supplier).all()
+
+@supplier_router.get("/{supplier_id}")
+async def get_supplier(supplier_id: int, session: Session = Depends(session_dependencies)):
+    supplier = session.get(Supplier, supplier_id)
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found!")    
+    return supplier
 
 @supplier_router.post("/")
 async def create_supplier(supplier_base: SupplierBase, session: Session = Depends(session_dependencies)):
