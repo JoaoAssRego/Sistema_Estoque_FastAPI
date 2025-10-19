@@ -9,10 +9,19 @@ class OrderBase(BaseModel): # Modelo base para Order
 
     model_config = ConfigDict(from_attributes=True)
 
-class JsonOrderBase(BaseModel):
+class JsonOrderGet(BaseModel):
     id: int
     product_id: int
     user_id: int
+    quantity: int
+    total_price: float
+    status: str
+
+    # Permite ler de objetos SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)
+
+class JsonOrderUpdate(BaseModel):
+    product_id: int
     quantity: int
     total_price: float
     status: str
