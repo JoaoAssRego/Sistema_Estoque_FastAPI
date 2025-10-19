@@ -170,9 +170,15 @@ async def partial_update_product(
     
     # Atualiza apenas campos enviados (exclude_unset ignora campos None)
     update_data = product_update.model_dump(exclude_unset=True)
+    # Se não há dados para atualizar
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update"
+        )
     
     # Valida Category se foi enviado
-    if "category_id" in update_data and update_data["category_id"] is not None:
+    if "category_id" in update_data:
         category = session.get(Category, update_data["category_id"])
         if not category:
             raise HTTPException(
@@ -181,7 +187,7 @@ async def partial_update_product(
             )
     
     # Valida Supplier se foi enviado
-    if "supplier_id" in update_data and update_data["supplier_id"] is not None:
+    if "supplier_id" in update_data:
         supplier = session.get(Supplier, update_data["supplier_id"])
         if not supplier:
             raise HTTPException(

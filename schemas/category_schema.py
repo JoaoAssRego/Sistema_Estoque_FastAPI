@@ -13,3 +13,9 @@ class JsonCategoryBase(BaseModel):
     description: str
 
     model_config= ConfigDict(from_attributes=True)
+
+class JsonCategoryPatch(BaseModel):
+    name: Optional[str]
+    description: Optional[str]
+
+    model_config= ConfigDict(from_attributes=True)

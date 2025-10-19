@@ -8,7 +8,7 @@ from typing import List
 order_router = APIRouter(prefix="/order", tags=["order"])
 
 # Constantes de status válidos
-VALID_STATUSES = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELED"]
+VALID_STATUSES = ["PENDING", "CONFIRMED", "DELIVERED", "CANCELED"]
 
 # ============================================
 # GET - Listar todos os pedidos
@@ -104,7 +104,7 @@ async def create_order(
     return new_order
 
 # ============================================
-# PATCH - Cancelar pedido (atualização de status)
+# PATCH - Cancelar pedido
 # ============================================
 @order_router.patch("/{order_id}/cancel", response_model=JsonOrderGet)
 async def cancel_order(
@@ -218,8 +218,14 @@ async def partial_update_order(
     # Extrai apenas campos enviados
     update_data = order_update.model_dump(exclude_unset=True)
     
-    needs_recalc = False  # ✅ Nome consistente
-    product = None  # Armazena produto se precisar buscar
+    # Se não há dados para atualizar
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update"
+        )
+    needs_recalc = False 
+    product = None  
     
     # Valida e atualiza product_id se enviado
     if "product_id" in update_data:
@@ -244,7 +250,6 @@ async def partial_update_order(
     
     # Valida e atualiza status se enviado
     if "status" in update_data:
-        new_status = update_data["status"]
         
         # Apenas admin pode mudar status
         if not current_user.admin:
@@ -254,14 +259,14 @@ async def partial_update_order(
             )
         
         # Valida status
-        if new_status not in VALID_STATUSES:
+        if update_data["status"] not in VALID_STATUSES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}"
             )
-        
-        order.status = new_status
-    
+
+        order.status = update_data["status"]
+
     # Recalcula total_price se necessário
     if needs_recalc:
         # Se não buscou produto ainda, busca agora
