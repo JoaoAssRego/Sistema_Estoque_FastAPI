@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from models.models import Category, User 
+from models.models import Category,Product, User 
 from .dependencies import session_dependencies, verify_token
 from schemas.category_schema import CategoryBase, JsonCategoryBase, JsonCategoryPatch
 from sqlalchemy.orm import Session
@@ -242,10 +242,8 @@ async def delete_category(
     """
     Deleta uma categoria.
     Apenas administradores podem deletar categorias.
-    
-    ATENÇÃO: Pode falhar se houver produtos associados a esta categoria
-    (depende das constraints do banco de dados).
     """
+
     # Verifica permissão
     if not current_user.admin:
         raise HTTPException(
@@ -253,6 +251,16 @@ async def delete_category(
             detail="Only admins can delete categories"
         )
     
+    products_exist = session.query(Product).filter(
+        Product.category_id == category_id
+    ).first() is not None
+    
+    if products_exist:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete category with products"
+        )
+
     # Busca categoria
     category = session.get(Category, category_id)
     if not category:
