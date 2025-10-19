@@ -20,11 +20,18 @@ class JsonOrderGet(BaseModel):
     # Permite ler de objetos SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
 
-class JsonOrderUpdate(BaseModel):
+class JsonOrderPut(BaseModel):
     product_id: int
     quantity: int
-    total_price: float
     status: str
+
+    # Permite ler de objetos SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)
+
+class JsonOrderPatch(BaseModel):
+    product_id: Optional[int] = None
+    quantity: Optional[int] = None
+    status: Optional[str] = None
 
     # Permite ler de objetos SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
