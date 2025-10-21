@@ -13,10 +13,7 @@ category_router = APIRouter(prefix="/category", tags=["category"])
 # ============================================
 @category_router.get("/", response_model=List[JsonCategoryBase])
 async def list_categories(session: Session = Depends(session_dependencies)):
-    """
-    Lista todas as categorias disponíveis.
-    Endpoint público (não requer autenticação).
-    """
+
     return session.query(Category).all()
 
 # ============================================
@@ -27,10 +24,7 @@ async def get_category(
     category_id: int, 
     session: Session = Depends(session_dependencies)
 ):
-    """
-    Busca uma categoria específica por ID.
-    Endpoint público (não requer autenticação).
-    """
+
     category = session.get(Category, category_id)
     if not category:
         raise HTTPException(
@@ -48,10 +42,7 @@ async def create_category(
     session: Session = Depends(session_dependencies), 
     current_user: User = Depends(verify_token)
 ):
-    """
-    Cria uma nova categoria.
-    Apenas administradores podem criar categorias.
-    """
+
     # Verifica permissão
     if not current_user.admin:
         raise HTTPException(
@@ -101,10 +92,7 @@ async def update_category(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
-    """
-    Atualiza uma categoria completamente (todos os campos).
-    Apenas administradores podem atualizar categorias.
-    """
+
     # Verifica permissão
     if not current_user.admin:
         raise HTTPException(
@@ -159,10 +147,7 @@ async def partial_update_category(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)    
 ):
-    """
-    Atualiza uma categoria parcialmente (apenas campos enviados).
-    Apenas administradores podem atualizar categorias.
-    """
+
     # Verifica permissão
     if not current_user.admin:
         raise HTTPException(
@@ -239,10 +224,6 @@ async def delete_category(
     session: Session = Depends(session_dependencies), 
     current_user: User = Depends(verify_token)
 ):
-    """
-    Deleta uma categoria.
-    Apenas administradores podem deletar categorias.
-    """
 
     # Verifica permissão
     if not current_user.admin:

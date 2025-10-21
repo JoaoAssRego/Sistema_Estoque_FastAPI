@@ -91,7 +91,7 @@ async def create_product(
 @product_router.put("/{product_id}", response_model=JsonProductGet)
 async def update_product(
     product_id: int,
-    product_update: JsonProductPut,  # Usando JsonProductPut
+    product_update: JsonProductPut,  
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -149,7 +149,7 @@ async def update_product(
 @product_router.patch("/{product_id}", response_model=JsonProductGet)
 async def partial_update_product(
     product_id: int,
-    product_update: JsonProductPatch,  # Schema com campos opcionais
+    product_update: JsonProductPatch,
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -161,15 +161,16 @@ async def partial_update_product(
             detail="Product not found!"
         )
 
-    # Verifica permissão (apenas admin pode atualizar)
+    # Verifica permissão
     if not current_user.admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins can update products"
         )
     
-    # Atualiza apenas campos enviados (exclude_unset ignora campos None)
+    # Atualiza apenas campos enviados 
     update_data = product_update.model_dump(exclude_unset=True)
+
     # Se não há dados para atualizar
     if not update_data:
         raise HTTPException(
