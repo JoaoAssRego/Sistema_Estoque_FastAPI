@@ -95,7 +95,7 @@ class StockMovement(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     movement_type = Column(String, nullable=False) # 'entrada' ou 'saida'
     quantity = Column(Integer, nullable=False)
-    reference_type = Column(String(20))
+    reference_type = Column(String(20)) # 'order' ou 'return'
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     
