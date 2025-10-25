@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from models.models import StockLevel, StockMovement, User, Product
 from .dependencies import session_dependencies, verify_token, verify_admin
 from schemas.stock_schema import (
-    JsonStockMovementGet, 
-    JsonStockMovementCreate,
-    JsonStockLevelGet,
-    JsonStockLevelPost, 
-    JsonStockLevelPatch, 
-    JsonStockLevelPut
+    StockMovementGet, 
+    StockMovementCreate,
+    StockLevelGet,
+    StockLevelPost, 
+    StockLevelPatch, 
+    StockLevelPut
 )
 from typing import List, Optional
 from datetime import datetime
@@ -24,7 +24,7 @@ stock_router = APIRouter(
 # STOCK LEVELS - Níveis de Estoque
 # ============================================
 
-@stock_router.get("/levels", response_model=List[JsonStockLevelGet])
+@stock_router.get("/levels", response_model=List[StockLevelGet])
 async def list_stock_levels(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
@@ -33,7 +33,7 @@ async def list_stock_levels(
     return session.query(StockLevel).all()
 
 
-@stock_router.get("/levels/{stock_id}", response_model=JsonStockLevelGet)
+@stock_router.get("/levels/{stock_id}", response_model=StockLevelGet)
 async def get_stock_level(
     stock_id: int,
     session: Session = Depends(session_dependencies),
@@ -50,9 +50,9 @@ async def get_stock_level(
     return stocklevel
 
 
-@stock_router.post("/levels", response_model=JsonStockLevelGet, status_code=status.HTTP_201_CREATED)
+@stock_router.post("/levels", response_model=StockLevelGet, status_code=status.HTTP_201_CREATED)
 async def create_stock_level(
-    stocklevel: JsonStockLevelPost,
+    stocklevel: StockLevelPost,
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -90,10 +90,10 @@ async def create_stock_level(
     return new_stocklevel
 
 
-@stock_router.put("/levels/{stock_id}", response_model=JsonStockLevelGet)
+@stock_router.put("/levels/{stock_id}", response_model=StockLevelGet)
 async def put_stock_level(
     stock_id: int,
-    stock_update: JsonStockLevelPut,
+    stock_update: StockLevelPut,
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -117,10 +117,10 @@ async def put_stock_level(
     return stocklevel
 
 
-@stock_router.patch("/levels/{stock_id}", response_model=JsonStockLevelGet)
+@stock_router.patch("/levels/{stock_id}", response_model=StockLevelGet)
 async def patch_stock_level(
     stock_id: int,
-    stock_update: JsonStockLevelPatch,
+    stock_update: StockLevelPatch,
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -174,7 +174,7 @@ async def delete_stock_level(
 # STOCK MOVEMENTS - Movimentações de Estoque
 # ============================================
 
-@stock_router.get("/movements", response_model=List[JsonStockMovementGet])
+@stock_router.get("/movements", response_model=List[StockMovementGet])
 async def list_stock_movements(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
@@ -184,7 +184,7 @@ async def list_stock_movements(
     return session.query(StockMovement).all()
 
 
-@stock_router.get("/movements/{movement_id}", response_model=JsonStockMovementGet)
+@stock_router.get("/movements/{movement_id}", response_model=StockMovementGet)
 async def get_stock_movement_by_id(
     movement_id: int,
     session: Session = Depends(session_dependencies),
@@ -201,7 +201,7 @@ async def get_stock_movement_by_id(
     return movement
 
 
-@stock_router.get("/movements/product/{product_id}", response_model=List[JsonStockMovementGet])
+@stock_router.get("/movements/product/{product_id}", response_model=List[StockMovementGet])
 async def get_stock_movements_by_product(
     product_id: int,
     session: Session = Depends(session_dependencies),
@@ -230,9 +230,9 @@ async def get_stock_movements_by_product(
     return stockmovements
 
 
-@stock_router.post("/movements", response_model=JsonStockMovementGet, status_code=status.HTTP_201_CREATED)
+@stock_router.post("/movements", response_model=StockMovementGet, status_code=status.HTTP_201_CREATED)
 async def create_stock_movement(
-    stockmovement: JsonStockMovementCreate,
+    stockmovement: StockMovementCreate,
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -335,7 +335,7 @@ async def delete_stock_movement(
 # ROTAS AUXILIARES
 # ============================================
 
-@stock_router.get("/levels/product/{product_id}", response_model=JsonStockLevelGet)
+@stock_router.get("/levels/product/{product_id}", response_model=StockLevelGet)
 async def get_stock_level_by_product(
     product_id: int,
     session: Session = Depends(session_dependencies),
@@ -364,7 +364,7 @@ async def get_stock_level_by_product(
     return stock_level
 
 
-@stock_router.get("/alerts", response_model=List[JsonStockLevelGet])
+@stock_router.get("/alerts", response_model=List[StockLevelGet])
 async def get_low_stock_alerts(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)

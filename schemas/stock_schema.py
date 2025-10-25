@@ -6,12 +6,12 @@ from datetime import datetime
 # STOCK MOVEMENT SCHEMAS
 # ========================================
 
-class JsonStockMovementCreate(BaseModel):
+class StockMovementCreate(BaseModel):
     """Schema para criar movimentação"""
-    product_id: int = Field(..., gt=0)
-    movement_type: str = Field(..., description="'in' ou 'out'")
-    quantity: int = Field(..., gt=0)
-    reference_type: Optional[str] = Field(None, max_length=20)
+    product_id: Annotated[int,Field(..., gt=0)]
+    movement_type: Annotated[str,Field(..., description="'in' ou 'out'")]
+    quantity: Annotated[int,Field(..., gt=0)]
+    reference_type: Annotated[Optional[str],Field(None, max_length=20)]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -35,7 +35,7 @@ class JsonStockMovementCreate(BaseModel):
         return v_lower
 
 
-class JsonStockMovementGet(BaseModel):
+class StockMovementGet(BaseModel):
     """Schema para retornar movimentação"""
     id: int
     product_id: int
@@ -47,7 +47,7 @@ class JsonStockMovementGet(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class JsonStockMovementPut(BaseModel):
+class StockMovementPut(BaseModel):
     product_id: int
     movement_type: Annotated[str,Field(max_length=3, description="'in' or 'out'")]
     quantity: Annotated[int,Field(gt=0)]
@@ -55,7 +55,7 @@ class JsonStockMovementPut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class JsonStockMovementPatch(BaseModel):
+class StockMovementPatch(BaseModel):
     product_id: Optional[int]
     movement_type: Annotated[Optional[str],Field(max_length=3, description="'in' or 'out'")]
     quantity: Annotated[Optional[int],Field(gt=0)]
@@ -67,7 +67,7 @@ class JsonStockMovementPatch(BaseModel):
 # STOCK LEVEL SCHEMAS
 # ========================================
 
-class JsonStockLevelGet(BaseModel):
+class StockLevelGet(BaseModel):
     """Schema para retornar nível de estoque"""
     id: int
     product_id: int
@@ -79,7 +79,7 @@ class JsonStockLevelGet(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class JsonStockLevelPost(BaseModel):
+class StockLevelPost(BaseModel):
     """Schema para criar nível de estoque"""
     product_id: int = Field(..., gt=0)
     current_quantity: int = Field(default=0, ge=0)
@@ -100,24 +100,20 @@ class JsonStockLevelPost(BaseModel):
         return v
 
 
-class JsonStockLevelPut(BaseModel):
+class StockLevelPut(BaseModel):
     """Schema para atualização completa (configurações apenas)"""
     current_quantity: int = Field(..., ge=0)
     minimum_quantity: int = Field(..., ge=0)
     maximum_quantity: Optional[int] = Field(None, ge=0)
     location: Optional[str] = Field(None, max_length=60)
-    
-    # ✅ NÃO inclui current_quantity - isso é atualizado via movements!
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class JsonStockLevelPatch(BaseModel):
+class StockLevelPatch(BaseModel):
     """Schema para atualização parcial (configurações apenas)"""
     minimum_quantity: Optional[int] = Field(None, ge=0)
     maximum_quantity: Optional[int] = Field(None, ge=0)
     location: Optional[str] = Field(None, max_length=60)
-    
-    # ✅ NÃO inclui current_quantity - isso é atualizado via movements!
 
     model_config = ConfigDict(from_attributes=True)

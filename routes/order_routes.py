@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from models.models import Order, Product, User
-from .dependencies import session_dependencies, verify_token
+from .dependencies import session_dependencies, verify_token, verify_admin
 from schemas.order_schema import OrderBase, JsonOrderGet, JsonOrderPatch, JsonOrderPut
 from typing import List 
 

@@ -1,17 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.models import Supplier, User, Product
 from .dependencies import session_dependencies, verify_token
-from schemas.supplier_schema import SupplierBase, JsonSupplierBase, JsonSupplierPatch
+from schemas.supplier_schema import SupplierBase, SupplierCreate, SupplierPatch
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-supplier_router = APIRouter(prefix="/supplier", tags=["supplier"])
+supplier_router = APIRouter(
+    prefix="/supplier", 
+    tags=["supplier"]
+    )
 
 # ============================================
 # GET - Listar todos os fornecedores
 # ============================================
-@supplier_router.get("/", response_model=List[JsonSupplierBase])
+@supplier_router.get("/", response_model=List[SupplierBase])
 async def list_suppliers(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
@@ -22,7 +25,7 @@ async def list_suppliers(
 # ============================================
 # GET - Buscar fornecedor por ID
 # ============================================
-@supplier_router.get("/{supplier_id}", response_model=JsonSupplierBase)
+@supplier_router.get("/{supplier_id}", response_model=SupplierBase)
 async def get_supplier(
     supplier_id: int,
     session: Session = Depends(session_dependencies),
@@ -40,9 +43,9 @@ async def get_supplier(
 # ============================================
 # POST - Criar novo fornecedor
 # ============================================
-@supplier_router.post("/", response_model=JsonSupplierBase, status_code=status.HTTP_201_CREATED)
+@supplier_router.post("/", response_model=SupplierBase, status_code=status.HTTP_201_CREATED)
 async def create_supplier(
-    supplier_base: SupplierBase,
+    supplier_base: SupplierCreate,
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -88,7 +91,7 @@ async def create_supplier(
 # ============================================
 # PUT - Atualizar fornecedor completamente
 # ============================================
-@supplier_router.put("/{supplier_id}", response_model=JsonSupplierBase)
+@supplier_router.put("/{supplier_id}", response_model=SupplierBase)
 async def update_supplier(
     supplier_id: int,
     supplier_update: SupplierBase,
@@ -143,10 +146,10 @@ async def update_supplier(
 # ============================================
 # PATCH - Atualizar fornecedor parcialmente
 # ============================================
-@supplier_router.patch("/{supplier_id}", response_model=JsonSupplierBase)
+@supplier_router.patch("/{supplier_id}", response_model=SupplierBase)
 async def partial_update_supplier(
     supplier_id: int,
-    supplier_update: JsonSupplierPatch, 
+    supplier_update: SupplierPatch, 
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
