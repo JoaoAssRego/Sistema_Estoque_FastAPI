@@ -31,3 +31,8 @@ def verify_token(token: str = Depends(oauth2_schema), session: Session = Depends
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+
+def verify_admin(current_user: User = Depends(verify_token)):
+    if not current_user.admin:
+        raise HTTPException(status_code=403, detail="Only admins can access this resource")
+    return current_user
