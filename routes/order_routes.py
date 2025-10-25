@@ -2,13 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from models.models import Order, Product, User
 from .dependencies import session_dependencies, verify_token, verify_admin
-from schemas.order_schema import OrderBase, JsonOrderGet, JsonOrderPatch, JsonOrderPut
+from schemas.order_schema import OrderCreate, JsonOrderGet, JsonOrderPatch, JsonOrderPut
 from typing import List 
 
-order_router = APIRouter(prefix="/order", tags=["order"])
-
-# Constantes de status válidos
-VALID_STATUSES = ["PENDING", "CONFIRMED", "DELIVERED", "CANCELED"]
+order_router = APIRouter(prefix="/order", tags=["order"],dependencies=[Depends(verify_admin)])
 
 # ============================================
 # GET - Listar todos os pedidos
@@ -44,13 +41,6 @@ async def get_order(
             detail="Order not found!"
         )
     
-    # Verifica permissão
-    if not current_user.admin and order.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to view this order"
-        )
-    
     return order
 
 # ============================================
@@ -58,16 +48,16 @@ async def get_order(
 # ============================================
 @order_router.post("/", response_model=JsonOrderGet, status_code=status.HTTP_201_CREATED)
 async def create_order(
-    order_base: OrderBase, 
+    order_base: OrderCreate, 
     session: Session = Depends(session_dependencies), 
     current_user: User = Depends(verify_token)
 ):
-    # Valida quantidade
-    if order_base.quantity <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Quantity must be greater than 0"
-        )
+    # # Valida quantidade
+    # if order_base.quantity <= 0:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="Quantity must be greater than 0"
+    #     )
     
     # Busca produto
     product = session.get(Product, order_base.product_id)
@@ -79,7 +69,7 @@ async def create_order(
     
     # Determina user_id: admin pode criar para outros, usuário comum só pra si
     target_user_id = current_user.id
-    if current_user.admin and getattr(order_base, "user_id", None):
+    if getattr(order_base, "user_id", None):
         # Valida se o usuário alvo existe
         target_user = session.get(User, order_base.user_id)
         if not target_user:
@@ -121,12 +111,12 @@ async def cancel_order(
         )
     
     # Verifica permissão
-    if not current_user.admin and order.user_id != current_user.id:
+    if order.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to cancel this order"
+            detail="You don't have permission to delete this order"
         )
-    
+
     # Valida se pode cancelar
     if order.status in ["DELIVERED", "CANCELED"]:
         raise HTTPException(
@@ -159,18 +149,18 @@ async def update_order(
         )
     
     # Verifica permissão
-    if not current_user.admin and order.user_id != current_user.id:
+    if order.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to update this order"
         )
     
-    # Valida quantidade
-    if order_update.quantity <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Quantity must be greater than 0"
-        )
+    # # Valida quantidade
+    # if order_update.quantity <= 0:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="Quantity must be greater than 0"
+    #     )
     
     # Valida produto
     product = session.get(Product, order_update.product_id)
@@ -180,11 +170,18 @@ async def update_order(
             detail="Product not found!"
         )
     
-    # Atualiza campos
-    order.product_id = order_update.product_id
-    order.quantity = order_update.quantity
-    order.total_price = float(product.price) * order_update.quantity
-    # user_id e status não mudam no PUT (use PATCH para status)
+    # Atualiza apenas campos enviados
+    update_data = order_update.model_dump(exclude_unset=True)
+    
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update"
+        )
+    
+    # Aplica atualizações
+    for key, value in update_data.items():
+        setattr(order, key, value)
     
     session.commit()
     session.refresh(order)
@@ -209,7 +206,7 @@ async def partial_update_order(
         )
 
     # Verifica permissão
-    if not current_user.admin and order.user_id != current_user.id:
+    if order.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to update this order"
@@ -238,34 +235,26 @@ async def partial_update_order(
         order.product_id = update_data["product_id"]
         needs_recalc = True
     
-    # Valida e atualiza quantity se enviado
-    if "quantity" in update_data:
-        if update_data["quantity"] <= 0:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Quantity must be greater than 0"
-            )
-        order.quantity = update_data["quantity"]
-        needs_recalc = True
+    # # Valida e atualiza quantity se enviado
+    # if "quantity" in update_data:
+    #     if update_data["quantity"] <= 0:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail="Quantity must be greater than 0"
+    #         )
+    #     order.quantity = update_data["quantity"]
+    #     needs_recalc = True
     
     # Valida e atualiza status se enviado
-    if "status" in update_data:
-        
-        # Apenas admin pode mudar status
-        if not current_user.admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only admins can change order status"
-            )
-        
-        # Valida status
-        if update_data["status"] not in VALID_STATUSES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}"
-            )
+    if "status" in update_data: order.status = update_data["status"]
+        # # Valida status
+        # if update_data["status"] not in VALID_STATUSES:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}"
+        #     )
 
-        order.status = update_data["status"]
+        
 
     # Recalcula total_price se necessário
     if needs_recalc:
@@ -288,13 +277,6 @@ async def delete_order(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
-    # Apenas admin pode deletar
-    if not current_user.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can delete orders"
-        )
-    
     # Busca pedido
     order = session.get(Order, order_id)
     if not order:
