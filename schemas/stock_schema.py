@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Optional
+from typing import Optional, Annotated
 from datetime import datetime
 
 class StockMovementCreate(BaseModel):
@@ -25,21 +25,21 @@ class StockMovementCreate(BaseModel):
             raise ValueError("reference_type must be 'order' or 'return'")
         return v.lower() if v else v
 
-class StockLevelBase(BaseModel):
-    product_id: int 
-    current_quantity: int = 0
-    minimum_quantity: int = 0
-    maximum_quantity: Optional[int] = None
-    location: Optional[str] = None
-    
+class JsonStockLevelGet(BaseModel):
+    product_id: int
+    current_quantity: int
+    minimum_quantity: int
+    maximum_quantity: int
+    location: str
+
     model_config = ConfigDict(from_attributes=True)
 
-class StockMovementBase(BaseModel):
+class JsonStockMovementGet(BaseModel):
     product_id: int
     movement_type: str
     quantity: int
     user_id: int
-    reference_type: Optional[str] = None
+    reference_type: str
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
