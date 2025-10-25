@@ -7,7 +7,7 @@ class JsonStockMovementCreate(BaseModel):
     product_id: Annotated[int,Field(strict=False)]
     movement_type: Annotated[str,Field(max_length=3, description="'in' or 'out'")]
     quantity: Annotated[int,Field(gt=0)]
-    reference_type: Annotated[Optional[str],Field(None, max_length=6, description="'order' or 'return'")]
+    reference_type: Annotated[Optional[str],Field(default=None, max_length=6, description="'order' or 'return'")]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,6 +34,22 @@ class JsonStockMovementGet(BaseModel):
     user_id: int
     reference_type: str
     created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class JsonStockMovementPut(BaseModel):
+    product_id: int
+    movement_type: Annotated[str,Field(max_length=3, description="'in' or 'out'")]
+    quantity: Annotated[int,Field(gt=0)]
+    reference_type: Annotated[str,Field(max_length=6, description="'order' or 'return'")]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class JsonStockMovementPatch(BaseModel):
+    product_id: Optional[int]
+    movement_type: Annotated[Optional[str],Field(max_length=3, description="'in' or 'out'")]
+    quantity: Annotated[Optional[int],Field(gt=0)]
+    reference_type: Annotated[Optional[str],Field(max_length=6, description="'order' or 'return'")]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -85,6 +101,8 @@ class JsonStockLevelPut(BaseModel):
     maximum_quantity: Annotated[int,Field(ge=0)]
     location: Annotated[str,Field(max_length=60,description="Product section")]
 
+    model_config = ConfigDict(from_attributes=True)
+
 class JsonStockLevelPatch(BaseModel):
     """Schema para alteração parcial do Stock"""
     product_id: int
@@ -92,3 +110,5 @@ class JsonStockLevelPatch(BaseModel):
     minimum_quantity: Annotated[Optional[int],Field(ge=0)]
     maximum_quantity: Annotated[Optional[int],Field(ge=0)]
     location: Annotated[Optional[str],Field(default=None,max_length=60,description="Product section")]
+
+    model_config = ConfigDict(from_attributes=True)
