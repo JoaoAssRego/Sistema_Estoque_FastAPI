@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from models.models import StockLevel, StockMovement, User, Product
 from .dependencies import session_dependencies, verify_token
-from schemas.stock_schema import JsonStockLevelGet, JsonStockMovementGet, JsonStockMovementCreate
+from schemas.stock_schema import JsonStockLevelGet, JsonStockMovementGet, JsonStockMovementCreate, JsonStockLevelPost
 from typing import List, Optional
 from datetime import datetime
 stock_router = APIRouter(prefix="/stock", tags=['stock'])
@@ -38,7 +38,31 @@ async def get_stock_levels(
             detail="Product not found!"
         )
     return stocklevel
-    
+
+@stock_router.post("/levels",response_model=JsonStockLevelGet)
+async def create_stock_levels(
+    stocklevel: JsonStockLevelPost,
+    session: Session = Depends(session_dependencies),
+    current_user: User = Depends(verify_token)
+):
+    if not current_user.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can access this information."
+        )
+    product = session.get(Product,stocklevel.product_id)
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Product not found!")
+    new_stocklevel = StockLevel(
+        product_id = product.id,
+        current_quantity = stocklevel.current_quantity,
+        minimum_quantity = stocklevel.minimum_quantity,
+        location= stocklevel.location
+    ) 
+    session.add(new_stocklevel)
+    session.commit()
+    session.refresh(new_stocklevel)
+    return new_stocklevel
 
 @stock_router.get("/movement",response_model=List[JsonStockMovementGet])
 async def list_stock_movement(
