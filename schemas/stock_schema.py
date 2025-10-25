@@ -50,7 +50,7 @@ class JsonStockLevelGet(BaseModel):
 
 class JsonStockLevelPost(BaseModel):
     """Schema para criar Stock Level"""
-    product_id: Annotated[int,Field(ge=0)]
+    product_id: int
     current_quantity: Annotated[int,Field(default=0,ge=0)]
     minimum_quantity: Annotated[int,Field(ge=0)]
     maximum_quantity: Annotated[int,Field(ge=0)]
@@ -64,3 +64,31 @@ class JsonStockLevelPost(BaseModel):
         if v.lower() is None or v.lower() not in ['fridge','shelves','pallet truck']: # Places from stock
             raise ValueError("Location not exist in stock!")
         return v.lower()
+    
+    @field_validator('minimum_quantity')
+    @classmethod
+    def valid_minimum(cls,v):
+        if cls.current_quantity < v:
+            raise ValueError("Actual value cannot be lower than minimum") 
+        return v
+    
+    @field_validator('maximum_quantity')
+    @classmethod
+    def valid_maximum(cls,v):
+        if cls.current_quantity > v:
+            raise ValueError("Actual value cannot be higher than maximum") 
+        return v
+    
+class JsonStockLevelPut(BaseModel):
+    current_quantity: Annotated[int,Field(default=0,ge=0)]
+    minimum_quantity: Annotated[int,Field(ge=0)]
+    maximum_quantity: Annotated[int,Field(ge=0)]
+    location: Annotated[str,Field(max_length=60,description="Product section")]
+
+class JsonStockLevelPatch(BaseModel):
+    """Schema para alteração parcial do Stock"""
+    product_id: int
+    current_quantity: Annotated[Optional[int],Field(ge=0)]
+    minimum_quantity: Annotated[Optional[int],Field(ge=0)]
+    maximum_quantity: Annotated[Optional[int],Field(ge=0)]
+    location: Annotated[Optional[str],Field(default=None,max_length=60,description="Product section")]

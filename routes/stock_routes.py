@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from models.models import StockLevel, StockMovement, User, Product
 from .dependencies import session_dependencies, verify_token
-from schemas.stock_schema import JsonStockLevelGet, JsonStockMovementGet, JsonStockMovementCreate, JsonStockLevelPost
+from schemas.stock_schema import JsonStockLevelGet, JsonStockMovementGet, JsonStockMovementCreate, JsonStockLevelPost, JsonStockLevelPatch, JsonStockLevelPut
 from typing import List, Optional
 from datetime import datetime
 stock_router = APIRouter(prefix="/stock", tags=['stock'])
@@ -57,13 +57,74 @@ async def create_stock_levels(
         product_id = product.id,
         current_quantity = stocklevel.current_quantity,
         minimum_quantity = stocklevel.minimum_quantity,
-        location= stocklevel.location
+        maximum_quantity = stocklevel.maximum_quantity,
+        location = stocklevel.location
     ) 
     session.add(new_stocklevel)
     session.commit()
     session.refresh(new_stocklevel)
     return new_stocklevel
 
+@stock_router.put("/levels/{stock_id}",response_model=JsonStockLevelGet)
+async def put_stock_level(
+    stock_id: int,
+    stock_update: JsonStockLevelPut,
+    session: Session = Depends(session_dependencies),
+    current_user: User = Depends(verify_token)
+):
+    if not current_user.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can access this information."
+        )
+    stocklevel = session.get(StockLevel,stock_id)
+    if not stocklevel:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock level not found!")
+    
+    stocklevel.current_quantity = stock_update.current_quantity
+    stocklevel.minimum_quantity = stock_update.minimum_quantity
+    stocklevel.maximum_quantity = stock_update.maximum_quantity
+    stocklevel.location = stock_update.location
+    
+    session.commit()
+    session.refresh(stocklevel)
+    return stocklevel
+
+@stock_router.patch("/level",response_model=JsonStockLevelGet)
+async def patch_stock_level(
+    stock_id: int,
+    stock_update: JsonStockLevelPatch,
+    session: Session = Depends(session_dependencies),
+    current_user: User = Depends(verify_token)
+):
+    if not current_user.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can access this information."
+        )
+    stocklevel = session.get(StockLevel,stock_id)
+    if not stocklevel:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Stock not found!")
+    
+    # Atualiza apenas campos enviados 
+    update_data = stock_update.model_dump(exclude_unset=True)
+
+    # Se não há dados para atualizar
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update"
+        )
+    
+    # Aplica atualizações
+    for key, value in update_data.items():
+        setattr(stocklevel, key, value)
+    
+    session.commit()
+    session.refresh(stocklevel)
+    return stocklevel
+
+    
 @stock_router.get("/movement",response_model=List[JsonStockMovementGet])
 async def list_stock_movement(
     session: Session = Depends(session_dependencies),
