@@ -124,6 +124,31 @@ async def patch_stock_level(
     session.refresh(stocklevel)
     return stocklevel
 
+@stock_router.delete("/level/{stock_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_stock_level(
+    stock_id: int,
+    session: Session = Depends(session_dependencies),
+    current_user: User = Depends(verify_token)
+):
+    # Apenas admin pode deletar
+    if not current_user.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can delete stock level"
+        )
+    
+    # Busca pedido
+    stocklevel = session.get(StockLevel, stock_id)
+    if not stocklevel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Stock Level not found!"
+        )
+    
+    # Deleta pedido
+    session.delete(stocklevel)
+    session.commit()
+    # Não retorna nada com status 204
     
 @stock_router.get("/movement",response_model=List[JsonStockMovementGet])
 async def list_stock_movement(
@@ -262,3 +287,29 @@ async def patch_stock_level(
     session.commit()
     session.refresh(stockmovement)
     return stockmovement
+
+@stock_router.delete("/movement/{stock_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_stock_movement(
+    stock_id: int,
+    session: Session = Depends(session_dependencies),
+    current_user: User = Depends(verify_token)
+):
+    # Apenas admin pode deletar
+    if not current_user.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can delete stock movement"
+        )
+    
+    # Busca pedido
+    stockmovement = session.get(StockMovement, stock_id)
+    if not stockmovement:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Stock Movement not found!"
+        )
+    
+    # Deleta pedido
+    session.delete(stockmovement)
+    session.commit()
+    # Não retorna nada com status 204
