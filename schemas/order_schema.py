@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Optional, Annotated
+from typing import Optional
 from datetime import datetime
 
 class OrderCreate(BaseModel):
@@ -7,7 +7,7 @@ class OrderCreate(BaseModel):
     Schema para criar pedido.
     """
     product_id: int
-    quantity: Annotated[int,Field(..., ge=0)]
+    quantity: int = Field(..., ge=0)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -30,7 +30,7 @@ class JsonOrderPut(BaseModel):
     Schema para atualização completa do pedido.
     """
     product_id: int
-    quantity: Annotated[int,Field(..., ge=0)]
+    quantity: int = Field(..., ge=0)
     status: str
 
     model_config = ConfigDict(from_attributes=True)
@@ -48,7 +48,7 @@ class JsonOrderPut(BaseModel):
 class JsonOrderPatch(BaseModel):
     """Schema para atualização parcial do pedido"""
     product_id: Optional[int]
-    quantity: Annotated[Optional[int],Field(..., ge=0)]
+    quantity: Optional[int] = Field(..., ge=0)
     status: Optional[str]
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Optional, Annotated
+from typing import Optional
 from datetime import datetime
 
 # ========================================
@@ -8,10 +8,10 @@ from datetime import datetime
 
 class StockMovementCreate(BaseModel):
     """Schema para criar movimentação"""
-    product_id: Annotated[int,Field(..., gt=0)]
-    movement_type: Annotated[str,Field(..., description="'in' ou 'out'")]
-    quantity: Annotated[int,Field(..., gt=0)]
-    reference_type: Annotated[Optional[str],Field(None, max_length=20)]
+    product_id: int = Field(..., gt=0)
+    movement_type: str = Field(..., description="'in' ou 'out'")
+    quantity: int = Field(..., gt=0)
+    reference_type: Optional[str] = Field(None, max_length=20)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -49,17 +49,17 @@ class StockMovementGet(BaseModel):
 
 class StockMovementPut(BaseModel):
     product_id: int
-    movement_type: Annotated[str,Field(max_length=3, description="'in' or 'out'")]
-    quantity: Annotated[int,Field(gt=0)]
-    reference_type: Annotated[str,Field(max_length=6, description="'order' or 'return'")]
+    movement_type: str = Field(max_length=3, description="'in' or 'out'")
+    quantity: int = Field(gt=0)
+    reference_type: str = Field(max_length=6, description="'order' or 'return'")
 
     model_config = ConfigDict(from_attributes=True)
 
 class StockMovementPatch(BaseModel):
     product_id: Optional[int]
-    movement_type: Annotated[Optional[str],Field(max_length=3, description="'in' or 'out'")]
-    quantity: Annotated[Optional[int],Field(gt=0)]
-    reference_type: Annotated[Optional[str],Field(max_length=6, description="'order' or 'return'")]
+    movement_type: Optional[str] = Field(max_length=3, description="'in' or 'out'")
+    quantity: Optional[int] = Field(gt=0)
+    reference_type: Optional[str] = Field(max_length=6, description="'order' or 'return'")
 
     model_config = ConfigDict(from_attributes=True)
 
