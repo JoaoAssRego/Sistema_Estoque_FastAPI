@@ -1,13 +1,19 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Optional, Annotated
 
 class CategoryBase(BaseModel): # Modelo base para category
-    name: str
-    description: Optional[str]
+    name: Annotated[str,Field(
+        max_length=120,
+        pattern=r'^[a-zA-Z\s\^~]+$'
+    )]
+    description: Annotated[Optional[str],Field(
+        max_length=350,
+        pattern=r'^[a-zA-Z\s\^~]+$'
+    )]
 
     model_config= ConfigDict(from_attributes=True)
 
-class JsonCategoryBase(BaseModel):
+class JsonCategoryGet(BaseModel):
     id: int
     name: str
     description: str

@@ -155,13 +155,6 @@ async def update_order(
             detail="You don't have permission to update this order"
         )
     
-    # # Valida quantidade
-    # if order_update.quantity <= 0:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Quantity must be greater than 0"
-    #     )
-    
     # Valida produto
     product = session.get(Product, order_update.product_id)
     if not product:
@@ -234,27 +227,8 @@ async def partial_update_order(
             )
         order.product_id = update_data["product_id"]
         needs_recalc = True
-    
-    # # Valida e atualiza quantity se enviado
-    # if "quantity" in update_data:
-    #     if update_data["quantity"] <= 0:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_400_BAD_REQUEST,
-    #             detail="Quantity must be greater than 0"
-    #         )
-    #     order.quantity = update_data["quantity"]
-    #     needs_recalc = True
-    
-    # Valida e atualiza status se enviado
-    if "status" in update_data: order.status = update_data["status"]
-        # # Valida status
-        # if update_data["status"] not in VALID_STATUSES:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_400_BAD_REQUEST,
-        #         detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}"
-        #     )
 
-        
+    if "status" in update_data: order.status = update_data["status"]
 
     # Recalcula total_price se necessário
     if needs_recalc:

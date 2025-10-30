@@ -1,16 +1,13 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Optional
+from typing import Optional, Annotated
 from datetime import datetime
 
 class OrderCreate(BaseModel):
     """
     Schema para criar pedido.
-    
-    O usuário envia apenas product_id e quantity.
-    Status é sempre "PENDING" no backend.
     """
-    product_id: int = Field(..., gt=0, description="ID do produto")
-    quantity: int = Field(..., gt=0, description="Quantidade desejada")
+    product_id: int
+    quantity: Annotated[int,Field(..., ge=0)]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,13 +28,10 @@ class JsonOrderGet(BaseModel):
 class JsonOrderPut(BaseModel):
     """
     Schema para atualização completa do pedido.
-    
-    Usuários comuns só podem alterar quantity.
-    Admins podem alterar status também.
     """
-    product_id: int = Field(..., gt=0)
-    quantity: int = Field(..., gt=0)
-    status: str = Field(..., description="Status do pedido")
+    product_id: int
+    quantity: Annotated[int,Field(..., ge=0)]
+    status: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -45,17 +39,17 @@ class JsonOrderPut(BaseModel):
     @classmethod
     def valid_status(cls, v: str) -> str:
         valid_statuses = ["PENDING", "CONFIRMED", "DELIVERED", "CANCELED"]
-        v_upper = v.upper()
-        if v_upper not in valid_statuses:
+        
+        if v.upper() not in valid_statuses:
             raise ValueError(f"Status inválido. Use: {', '.join(valid_statuses)}")
-        return v_upper
+        return v.upper()
 
 
 class JsonOrderPatch(BaseModel):
     """Schema para atualização parcial do pedido"""
-    product_id: Optional[int] = Field(None, gt=0)
-    quantity: Optional[int] = Field(None, gt=0)
-    status: Optional[str] = None
+    product_id: Optional[int]
+    quantity: Annotated[Optional[int],Field(..., ge=0)]
+    status: Optional[str]
 
     model_config = ConfigDict(from_attributes=True)
 

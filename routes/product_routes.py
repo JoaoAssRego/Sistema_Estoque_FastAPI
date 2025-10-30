@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.models import Product, User, Category, Supplier
-from .dependencies import session_dependencies, verify_token
-from schemas.product_schema import ProductBase, JsonProductGet, JsonProductPut, JsonProductPatch
+from .dependencies import session_dependencies, verify_token, verify_admin
+from schemas.product_schema import ProductBase, JsonProductGet, JsonProductPatch
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List
 
-product_router = APIRouter(prefix="/product", tags=["product"])
+product_router = APIRouter(prefix="/product", tags=["product"],dependencies=[Depends(verify_admin)])
 
 # ============================================
 # GET - Listar todos os produtos
@@ -36,12 +37,6 @@ async def create_product(
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
-    # Verifica se usuário é admin
-    if not current_user.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can create products"
-        )
     
     # Valida duplicidade por nome
     existing_product = session.query(Product).filter(
@@ -91,16 +86,9 @@ async def create_product(
 @product_router.put("/{product_id}", response_model=JsonProductGet)
 async def update_product(
     product_id: int,
-    product_update: JsonProductPut,  
-    session: Session = Depends(session_dependencies),
-    current_user: User = Depends(verify_token)
+    product_update: ProductBase,  
+    session: Session = Depends(session_dependencies)
 ):
-    # Verifica se usuário é admin
-    if not current_user.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can update products"
-        )
     
     # Busca produto
     product = session.get(Product, product_id)
@@ -150,8 +138,7 @@ async def update_product(
 async def partial_update_product(
     product_id: int,
     product_update: JsonProductPatch,
-    session: Session = Depends(session_dependencies),
-    current_user: User = Depends(verify_token)
+    session: Session = Depends(session_dependencies)
 ):
     # Busca produto
     product = session.get(Product, product_id)
@@ -159,13 +146,6 @@ async def partial_update_product(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not found!"
-        )
-
-    # Verifica permissão
-    if not current_user.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can update products"
         )
     
     # Atualiza apenas campos enviados 
@@ -217,16 +197,8 @@ async def partial_update_product(
 @product_router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     product_id: int,
-    session: Session = Depends(session_dependencies),
-    current_user: User = Depends(verify_token)
-):
-    # Verifica se usuário é admin
-    if not current_user.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can delete products"
-        )
-    
+    session: Session = Depends(session_dependencies)
+):  
     # Busca produto
     product = session.get(Product, product_id)
     if not product:
@@ -235,7 +207,13 @@ async def delete_product(
             detail="Product not found!"
         )
     
-    # Deleta produto
-    session.delete(product)
-    session.commit()
-    # ✅ IMPORTANTE: Não retorna nada com status 204
+    try:
+        session.delete(product)
+        session.commit()
+    except IntegrityError:
+        # Falha se há produtos usando esta categoria
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete product that has associated orders"
+        )

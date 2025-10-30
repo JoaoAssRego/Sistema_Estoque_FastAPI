@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.models import Category,Product, User 
 from .dependencies import session_dependencies, verify_token
-from schemas.category_schema import CategoryBase, JsonCategoryBase, JsonCategoryPatch
+from schemas.category_schema import CategoryBase, JsonCategoryGet, JsonCategoryPatch
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List
@@ -11,7 +11,7 @@ category_router = APIRouter(prefix="/category", tags=["category"])
 # ============================================
 # GET - Listar todas as categorias
 # ============================================
-@category_router.get("/", response_model=List[JsonCategoryBase])
+@category_router.get("/", response_model=List[JsonCategoryGet])
 async def list_categories(session: Session = Depends(session_dependencies)):
 
     return session.query(Category).all()
@@ -19,7 +19,7 @@ async def list_categories(session: Session = Depends(session_dependencies)):
 # ============================================
 # GET - Obter categoria por ID
 # ============================================
-@category_router.get("/{category_id}", response_model=JsonCategoryBase)
+@category_router.get("/{category_id}", response_model=JsonCategoryGet)
 async def get_category(
     category_id: int, 
     session: Session = Depends(session_dependencies)
@@ -36,7 +36,7 @@ async def get_category(
 # ============================================
 # POST - Criar nova categoria
 # ============================================
-@category_router.post("/", response_model=JsonCategoryBase, status_code=status.HTTP_201_CREATED)
+@category_router.post("/", response_model=JsonCategoryGet, status_code=status.HTTP_201_CREATED)
 async def create_category(
     category_base: CategoryBase, 
     session: Session = Depends(session_dependencies), 
@@ -85,7 +85,7 @@ async def create_category(
 # ============================================
 # PUT - Atualizar categoria completamente
 # ============================================
-@category_router.put("/{category_id}", response_model=JsonCategoryBase)
+@category_router.put("/{category_id}", response_model=JsonCategoryGet)
 async def update_category(
     category_id: int,
     category_update: CategoryBase,
@@ -140,7 +140,7 @@ async def update_category(
 # ============================================
 # PATCH - Atualizar categoria parcialmente
 # ============================================
-@category_router.patch("/{category_id}", response_model=JsonCategoryBase)
+@category_router.patch("/{category_id}", response_model=JsonCategoryGet)
 async def partial_update_category(
     category_id: int,
     category_update: JsonCategoryPatch,
