@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional
 
-class JsonProductGet(BaseModel): # Modelo para visualizar produtos
+class ProductGet(BaseModel): # Modelo para visualizar produtos
     id: int
     name: str
     description: str

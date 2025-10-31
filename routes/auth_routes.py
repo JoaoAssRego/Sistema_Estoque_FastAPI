@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from models.models import User
 from .dependencies import session_dependencies, verify_token
 from security.security import bcrypt_context
-from schemas.user_schema import UserBase
+from schemas.user_schema import UserBase, UserCreate, UserPatch
 from schemas.auth_schema import AuthBase
 from sqlalchemy.orm import Session
 from security.auth import create_token, auth
@@ -10,14 +10,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
-@auth_router.post("/signup", status_code=201)
-async def signup(user_base: UserBase, session: Session = Depends(session_dependencies)):
+@auth_router.post("/signup", status_code=status.HTTP_201_CREATED, response_model=UserBase)
+async def signup(user_base: UserCreate, session: Session = Depends(session_dependencies)):
 
     user = session.query(User).filter(User.email == user_base.email).first()
 
     if user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
     encrypted_password = bcrypt_context.hash(user_base.password)
 
     new_user = User(
@@ -25,8 +25,8 @@ async def signup(user_base: UserBase, session: Session = Depends(session_depende
         name=user_base.name,
         email=user_base.email,
         password=encrypted_password,
-        admin=user_base.admin,
-        active=user_base.active
+        admin=False,
+        active=True
     )
 
     session.add(new_user)
@@ -48,7 +48,7 @@ async def login(auth_base: AuthBase, session: Session = Depends(session_dependen
     user = auth(auth_base.email, auth_base.password, session)
 
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials")
     
     access_token = create_token(user.id)
     refresh_token = create_token(user.id, token_duration=60*24*7)

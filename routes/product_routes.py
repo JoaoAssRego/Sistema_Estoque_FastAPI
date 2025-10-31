@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.models import Product, User, Category, Supplier
 from .dependencies import session_dependencies, verify_token, verify_admin
-from schemas.product_schema import ProductBase, JsonProductGet, JsonProductPatch
+from schemas.product_schema import ProductCreate, ProductGet, ProductPatch, ProductUpdate
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List
@@ -11,14 +11,14 @@ product_router = APIRouter(prefix="/product", tags=["product"],dependencies=[Dep
 # ============================================
 # GET - Listar todos os produtos
 # ============================================
-@product_router.get("/", response_model=List[JsonProductGet])
+@product_router.get("/", response_model=List[ProductGet])
 async def list_products(session: Session = Depends(session_dependencies)):
     return session.query(Product).all()
 
 # ============================================
 # GET - Buscar produto por ID
 # ============================================
-@product_router.get("/{product_id}", response_model=JsonProductGet)
+@product_router.get("/{product_id}", response_model=ProductGet)
 async def get_product(product_id: int, session: Session = Depends(session_dependencies)):
     product = session.get(Product, product_id)
     if not product:
@@ -31,9 +31,9 @@ async def get_product(product_id: int, session: Session = Depends(session_depend
 # ============================================
 # POST - Criar novo produto
 # ============================================
-@product_router.post("/create", response_model=JsonProductGet, status_code=status.HTTP_201_CREATED)
+@product_router.post("/create", response_model=ProductGet, status_code=status.HTTP_201_CREATED)
 async def create_product(
-    product_base: ProductBase,
+    product_base: ProductCreate,
     session: Session = Depends(session_dependencies),
     current_user: User = Depends(verify_token)
 ):
@@ -83,10 +83,10 @@ async def create_product(
 # ============================================
 # PUT - Atualizar produto completo
 # ============================================
-@product_router.put("/{product_id}", response_model=JsonProductGet)
+@product_router.put("/{product_id}", response_model=ProductGet)
 async def update_product(
     product_id: int,
-    product_update: ProductBase,  
+    product_update: ProductUpdate,
     session: Session = Depends(session_dependencies)
 ):
     
@@ -134,10 +134,10 @@ async def update_product(
 # ============================================
 # PATCH - Atualizar produto parcialmente
 # ============================================
-@product_router.patch("/{product_id}", response_model=JsonProductGet)
+@product_router.patch("/{product_id}", response_model=ProductGet)
 async def partial_update_product(
     product_id: int,
-    product_update: JsonProductPatch,
+    product_update: ProductPatch,
     session: Session = Depends(session_dependencies)
 ):
     # Busca produto
