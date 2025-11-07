@@ -3,12 +3,16 @@ from models.models import User
 from .dependencies import session_dependencies, verify_token
 from security.security import bcrypt_context
 from schemas.user_schema import UserBase, UserCreate, UserPatch
-from schemas.auth_schema import AuthBase
+from schemas.auth_schema import AuthBase, AuthChangePassword
 from sqlalchemy.orm import Session
 from security.auth import create_token, auth
 from fastapi.security import OAuth2PasswordRequestForm
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+
+@auth_router.get("/me", response_model=UserBase)
+async def get_current_user(current_user: User = Depends(verify_token)):
+    return current_user
 
 @auth_router.post("/signup", status_code=status.HTTP_201_CREATED, response_model=UserBase)
 async def signup(user_base: UserCreate, session: Session = Depends(session_dependencies)):
@@ -77,10 +81,15 @@ async def login_form(request_form_schema: OAuth2PasswordRequestForm = Depends(),
     }
 
 @auth_router.get("/refresh")
-async def useRefreshToken(user: User = Depends(verify_token)):
-    access_token = create_token(user.id)
+async def useRefreshToken(current_user: User = Depends(verify_token)):
+    access_token = create_token(current_user.id)
     return {
         "access_token": access_token,
         "token_type": "bearer"
     }
 
+@auth_router.post("/change_password", response_model=UserBase)
+async def changePassword(new_password: AuthChangePassword, current_user: User = Depends(verify_token)):
+    encrypted_password = bcrypt_context.hash(new_password.password) # Criptografa a nova senha
+    current_user.password = encrypted_password
+    return current_user
