@@ -1,10 +1,10 @@
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, EmailStr
 from typing import Optional
 
 class UserBase(BaseModel): # Modelo base para usuário
     occupation: str
     name: str
-    email: str
+    email: EmailStr
     password: str
     admin: Optional[bool] = False
     active: Optional[bool]
@@ -16,7 +16,7 @@ class UserCreate(BaseModel): # Modelo base para autenticação
 
     occupation: str = Field(...,min_length=5, max_length=100)
     name: str = Field(...,min_length=5, max_length=100, pattern=r'^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$')
-    email: str = Field(...,min_length=5, max_length=100, pattern=r'^[\w\.-]+@[\w\.-]+\.\w+$')
+    email: EmailStr
     password: str = Field(...,min_length=5, max_length=100)
 
     model_config = ConfigDict(from_attributes=True)   
